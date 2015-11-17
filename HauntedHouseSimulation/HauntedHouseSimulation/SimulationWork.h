@@ -68,7 +68,7 @@ public:
 		grouponTicketsPercentage, doorTicketPercentage, fastpassTcketPercentage, otherTicketPercentage,
 		outsideServerStatus, fastpassServerStatus, insideServerStatus;
 	
-	float arrivalRate, M6FUIntervalHigh, M6FUIntervalLow,
+	float insideLineRate, M6FUEnterRate, M6FUIntervalHigh, M6FUIntervalLow,
 		simulationTime, timeOfLastEvent, timeOfNextEvent;
 
 	// Statistical Counter Variables

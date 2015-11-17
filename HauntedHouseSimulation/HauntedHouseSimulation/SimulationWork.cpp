@@ -10,8 +10,8 @@
 // Empty Spot
 #define EMPTY 1.0e+30
 
-// Global Car Counter
-int GourpCounter = 0;
+// Global group counter to see the next group arriving
+int arrivingGroupCounter = 0;
 
 // Constructor that Initializes all Values
 Simulation_Information::Simulation_Information(int argc, char * argv[])
@@ -30,8 +30,10 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 		{
 			// Number of cars
 			simulationInput >> numberOfGroups;
-			// Arrival Rate
-			simulationInput >> arrivalRate;
+			// rate at which people get to inside line
+			simulationInput >> insideLineRate;
+			// rate at which people are let in the HH
+			simulationInput >> M6FUEnterRate;
 			// Interarrival High Rate
 			simulationInput >> M6FUIntervalHigh;
 			// Interarrival Low Rate
@@ -53,7 +55,7 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 			// Amount of tickets sold from othger websites
 			simulationInput >> otherTicketPercentage;
 			// Amount of people allowed in the building, This is for fire code
-			simulationInput >> amountInsideBuilding;
+			//simulationInput >> amountInsideBuilding;
 		}
 		// Close File 
 		simulationInput.close();
@@ -62,7 +64,8 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 	{
 		// Default Initialization Variables.
 		numberOfGroups = 100;
-		arrivalRate = 480;
+		insideLineRate = 480;
+		M6FUEnterRate = 465;
 		M6FUIntervalHigh = 900;
 		M6FUIntervalLow = 600;
 		grouponTicketsPercentage = 50;
@@ -72,7 +75,7 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 		groupOnTicketAmount = 4.00;
 		doorTicketAmount = 10.00;
 		fastpassTicketAmount = 25.00;
-		amountInsideBuilding = 39;
+		//amountInsideBuilding = 39;
 
 
 	}
@@ -121,20 +124,12 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 	// First arrival
 	nextEventTypeArray[1] = simulationTime + massDensityFunction();
 
-	// Schedule First Event
-	if (arrayOfGroups[0].ticketType < 3)
-	{
-		arrayOfGroups[0].entranceArrivalTime = nextEventTypeArray[1];
-		// Depart entrance queue
-		nextEventTypeArray[2] = EMPTY;
-	}
 
-	else
-	{
-		arrayOfGroups[0].entranceArrivalTime = nextEventTypeArray[2];
-		// Depart entrance queue
-		nextEventTypeArray[1] = EMPTY;
-	}
+	arrayOfGroups[0].entranceArrivalTime = nextEventTypeArray[1];
+	
+	// Depart entrance queue
+	nextEventTypeArray[2] = EMPTY;
+	
 
 	// Leave parking space
 	nextEventTypeArray[3] = EMPTY;
@@ -144,6 +139,9 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 
 	// Leave Exit Queue
 	nextEventTypeArray[5] = EMPTY;
+
+	// increment the number of groups arrived
+	arrivingGroupCounter++;
 }
 
 void Simulation_Information::timing(void)
@@ -213,11 +211,47 @@ void Simulation_Information::chooseNextEvent(void)
 
 void Simulation_Information::outsideLine(void)
 {
+	// get the next event and determine if it is a fastpass
+	arrayOfGroups[arrivingGroupCounter].entranceArrivalTime = massDensityFunction();
 
+	if (arrayOfGroups[arrivingGroupCounter].ticketType < 3)
+	{
+		nextEventTypeArray[1] = arrayOfGroups[arrivingGroupCounter].entranceArrivalTime;
+	}
+	else
+	{
+		nextEventTypeArray[2] = arrayOfGroups[arrivingGroupCounter].entranceArrivalTime;
+	}
+
+
+
+	if (insideQueue.size() > 6)
+	{
+		outsideQueue.push(arrayOfGroups[arrivingGroupCounter]);
+		arrivingGroupCounter++;
+		
+	}
+	else
+		totalOutsideQueueDelayTime += simulationTime - timeOfLastEvent;
+
+	
+		
 }
 
 void Simulation_Information::fastPassLine(void)
 {
+	// get the next event and determine if it is a fastpass
+	arrayOfGroups[arrivingGroupCounter].entranceArrivalTime = massDensityFunction();
+
+	if (arrayOfGroups[arrivingGroupCounter].ticketType < 3)
+	{
+		nextEventTypeArray[1] = arrayOfGroups[arrivingGroupCounter].entranceArrivalTime;
+	}
+	else
+	{
+		nextEventTypeArray[2] = arrayOfGroups[arrivingGroupCounter].entranceArrivalTime;
+	}
+
 
 }
 
