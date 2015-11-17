@@ -1,3 +1,6 @@
+//Ryan stevens
+// This is where all the work for the simulation is done. 
+
 #include "SimulationWork.h"
 
 // Mnemonic For Server Busy
@@ -25,18 +28,20 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 		// Store Variables From Text File
 		while (simulationInput.is_open() && simulationInput.good())
 		{
-			// Number of Parking Spots
-			simulationInput >> parkingSpots;
 			// Number of cars
-			simulationInput >> numberOfCars;
+			simulationInput >> numberOfGroups;
 			// Arrival Rate
 			simulationInput >> arrivalRate;
 			// Interarrival High Rate
-			simulationInput >> parkIntervalHigh;
+			simulationInput >> M6FUIntervalHigh;
 			// Interarrival Low Rate
-			simulationInput >> parkIntervalLow;
-			// Exit Gate
-			simulationInput >> exitGate;
+			simulationInput >> M6FUIntervalLow;
+			// percentage for groupon tickets
+			simulationInput >> grouponTicketsPercentage;
+			// ticket value for groupon
+			simulationInput >> groupOnTicketAmount;
+			// ticket value for walk up
+			simulationInput >> doorTicketAmount;
 		}
 		// Close File 
 		simulationInput.close();
@@ -44,12 +49,15 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 	else
 	{
 		// Default Initialization Variables.
-		parkingSpots = 50;
-		numberOfCars = 100;
-		arrivalRate = 60;
-		parkIntervalHigh = 300;
-		parkIntervalLow = 120;
-		exitGate = 60;
+		numberOfGroups = 100;
+		arrivalRate = 480;
+		M6FUIntervalHigh = 900;
+		M6FUIntervalLow = 600;
+		grouponTicketsPercentage = 50;
+		groupOnTicketAmount = 4.00;
+		doorTicketAmount = 5.00;
+
+		
 	}
 
 	// Statistical Counters.
@@ -122,3 +130,4 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 	// Leave Exit Queue
 	timeOfNextEvent[5] = EMPTY;
 }
+

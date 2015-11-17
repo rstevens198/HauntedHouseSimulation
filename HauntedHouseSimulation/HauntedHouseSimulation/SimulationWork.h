@@ -38,6 +38,8 @@ public:
 	group()
 	{
 		int groupNumber = 0;
+		// Variable for the number on people in each group
+		int groupPeopleNumber = 0;
 		// Variable For Entrance Arrival Time (Enter Queue)
 		float entranceArrivalTime = 0.0;
 		// Variable For Entrance Depart Time (Exit Queue To Look For Parking)
@@ -50,6 +52,7 @@ public:
 		float totalTimeInSystem = 0.0;
 		// Variable to store what type of ticket thy have
 		int ticketType = 0;
+	}
 };
 
 
@@ -59,23 +62,24 @@ class Simulation_Information
 public:
 	// Variables For Simulation
 	const static int NUMOFEVENTS = 5;
-	int numberOfGroups;
-	float arrivalRate, M6FUIntervalHigh, M6FUIntervalLow, exitGate, simulationTime, timeOfLastEvent;
+	int numberOfGroups, grouponTicketsPercentage;
+	float arrivalRate, M6FUIntervalHigh, M6FUIntervalLow, simulationTime, timeOfLastEvent;
 
 	// Statistical Counter Variables
-	int nextEventType, numberOfCustomersDelayed, totalNumberOfGroups,
+	int nextEventType, numberOfCustomersDelayed, totalNumberOfGroups, totalGroupOnTickets, totalDoorTickets,
 		numberInEntranceQueue, numberInExitQueue, entranceServerStatus, leavingIndex,
 		maxEntranceQueueSize, peopleInM6FU, amountOfGroupsLeft;
 	float totalEntranceQueueDelayTime, nextLeavingGroup, timeSinceLastEvent,
-		areaUnderEntranceQueue, areaEntranceServerStatus, exitTime;
+		areaUnderEntranceQueue, areaEntranceServerStatus, exitTime, groupOnTicketAmount, doorTicketAmount;
 
-	// Parking Lot Array. Initializing as a vector and will resize dynamically based on user input
-	std::vector <float> parkingLotSpots;
-	// Entrace And Exit Queue
+
+	// Entrace And Exit Queue and M6FUqueue
 	std::queue <group> entranceQueue;
 	std::queue <group> exitQueue;
-	// Car List
-	std::vector <group> arrayOfCars;
+	std::queue <group> M6FUQueue;
+	// group List
+	std::vector <group> arrayOfGroups;
+	
 
 	// Time of Next Array Event That Will Tell Simulation When The Next Simulated Event Is.
 	// Will Be A Constant Size 6 For Size of All Event Handling Functions for Simulation.  
@@ -100,9 +104,10 @@ public:
 };
 
 
-// Mass Density Function 
+// Functions dealing with Random numbers 
 float massDensityFunction();
 float M6FUTime(float M6FUIntervalLow, float M6FUIntervalHigh);
-
+void PeopleInGroup();
+void TicketTypeSet();
 
 #endif
