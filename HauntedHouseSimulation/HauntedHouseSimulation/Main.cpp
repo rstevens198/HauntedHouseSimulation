@@ -1,7 +1,8 @@
 /*
 Class: CS 558
 Project: Haunted House Simulation for extra credit
-Description: 
+Description: This program is to run simulations and determine the best way to make money. should it be bigger groups? 
+	should it be pushing people through quicker? or should be be not using sites like groupon to sell tickets? 
 Ryan Stevens
 */
 
@@ -11,7 +12,7 @@ Ryan Stevens
 #include <fstream>
 #include <iostream>
 #include <Windows.h>
-#include "Simulation.h"
+#include "SimulationWork.h"
 
 // Main Function
 int main(int argc, char * argv[])
@@ -19,14 +20,11 @@ int main(int argc, char * argv[])
 	// Random See With Time. Need For Random Variates
 	srand(static_cast<unsigned> (time(NULL)));
 
-	// Exit Variable For User Key Press
-	bool keyDown = false;
-
 	// Create A Simulation Instance
 	Simulation_Information firstSimulation = Simulation_Information(argc, argv);
 
 	// Simulation Loop. Run Simulation Until Exit Parameter is met.
-	while ((firstSimulation.numberOfCustomersDelayed < firstSimulation.totalNumberOfCustomers) && (keyDown == false))
+	while (firstSimulation.numberOfCustomersDelayed < firstSimulation.totalNumberOfCustomers)
 	{
 		// Timing Function To Determine The Next Event
 		firstSimulation.timing();
@@ -34,10 +32,6 @@ int main(int argc, char * argv[])
 		// Update time-average statistical accumulators. 
 		firstSimulation.updateAverageTimeStats();
 
-
-		// Check For Key Press
-		if (GetAsyncKeyState(VK_ESCAPE))
-			keyDown = true;
 
 		// Switch To The Next Event Type Based on Event Type
 		firstSimulation.chooseNextEvent();
