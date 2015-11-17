@@ -16,14 +16,16 @@ Ryan Stevens
 #define SimulationWork
 
 // Car Structure For All Automobile Information
-class group
+class Group
 {
 public:
 	int groupNumber;
-	// Variable For Entrance Arrival Time (Enter Queue)
+	// Variable for the number on people in each group
+	int groupPeopleNumber;
+	// Variable For arrival to line. either fastpass or regular
 	float entranceArrivalTime;
-	// Variable For Entrance Depart Time (Exit Queue To Look For Parking)
-	float entranceDepartTime;	
+	// Variable For time they got to the inside line
+	float insideLineTime;
 	// Variable For time spent in the haunted house
 	float M6FUTimeLength;
 	// Variable for the time group exits the huanted house
@@ -35,7 +37,7 @@ public:
 	
 
 	// Default Constructor
-	group()
+	Group()
 	{
 		int groupNumber = 0;
 		// Variable for the number on people in each group
@@ -43,7 +45,7 @@ public:
 		// Variable For Entrance Arrival Time (Enter Queue)
 		float entranceArrivalTime = 0.0;
 		// Variable For Entrance Depart Time (Exit Queue To Look For Parking)
-		float entranceDepartTime = 0.0;
+		float insideLineTime = 0.0;
 		// Variable For time spent in the haunted house
 		float M6FUTimeLength = 0.0;
 		// Variable for the time group exits the huanted house
@@ -61,29 +63,38 @@ class Simulation_Information
 {
 public:
 	// Variables For Simulation
-	const static int NUMOFEVENTS = 5;
-	int numberOfGroups, grouponTicketsPercentage;
-	float arrivalRate, M6FUIntervalHigh, M6FUIntervalLow, simulationTime, timeOfLastEvent;
+	const static int NUMOFEVENTS = 6;
+	int numberOfGroups, amountInsideBuilding, 
+		grouponTicketsPercentage, doorTicketPercentage, fastpassTcketPercentage, otherTicketPercentage,
+		outsideServerStatus, fastpassServerStatus, insideServerStatus;
+	
+	float arrivalRate, M6FUIntervalHigh, M6FUIntervalLow,
+		simulationTime, timeOfLastEvent, timeOfNextEvent;
 
 	// Statistical Counter Variables
-	int nextEventType, numberOfCustomersDelayed, totalNumberOfGroups, totalGroupOnTickets, totalDoorTickets,
-		numberInEntranceQueue, numberInExitQueue, entranceServerStatus, leavingIndex,
-		maxEntranceQueueSize, peopleInM6FU, amountOfGroupsLeft;
-	float totalEntranceQueueDelayTime, nextLeavingGroup, timeSinceLastEvent,
-		areaUnderEntranceQueue, areaEntranceServerStatus, exitTime, groupOnTicketAmount, doorTicketAmount;
+	int nextEventType, numberOfGroupsExit, peopleInM6FU,
+		totalGroupOnTickets, totalDoorTickets, totalOtherTickets;
+	
+	float totalOutsideQueueDelayTime, totalFastpassQueueDelayTime, totalinsideQueueDelayTime,
+		  timeSinceLastEvent,
+		  areaUnderOutsideQueue, areaUnderFastpassQueue, areaUnderInsideQueue,
+		  groupOnTicketAmount, doorTicketAmount, fastpassTicketAmount;
+	
+		 
 
 
 	// Entrace And Exit Queue and M6FUqueue
-	std::queue <group> entranceQueue;
-	std::queue <group> exitQueue;
-	std::queue <group> M6FUQueue;
+	std::queue <Group> outsideQueue;
+	std::queue <Group> fastpassQueue;
+	std::queue <Group> insideQueue;
+	std::queue <Group> M6FUQueue;
 	// group List
-	std::vector <group> arrayOfGroups;
+	std::vector <Group> arrayOfGroups;
 	
 
 	// Time of Next Array Event That Will Tell Simulation When The Next Simulated Event Is.
 	// Will Be A Constant Size 6 For Size of All Event Handling Functions for Simulation.  
-	float timeOfNextEvent[NUMOFEVENTS];
+	float nextEventTypeArray[NUMOFEVENTS];
 
 	// Overloaded Constructor. Overloaded Initialization Method
 	Simulation_Information(int argc, char * argv[]);
@@ -91,12 +102,16 @@ public:
 	void timing(void);
 	// Event Function. Chose next event type
 	void chooseNextEvent(void);
-	// Arrival Function For Entrance Gate
-	void entranceArrive(void);
-	// Depart Function For Entrance Gate
-	void entranceDepart(void);
+	// Arrival Function For outsideLine
+	void outsideLine(void);
+	// Arrival Function for FastPassLine
+	void fastPassLine(void);
+	// sets up the inside line queue
+	void insideLine(void);
+	// put people in the haunted house
+	void M6FU(void);
 	// Arrival Function For Exit Gate
-	void exit(void);
+	void exitFunction(void);
 	// Update Average Time Stats
 	void updateAverageTimeStats(void);
 	// Report Statisical Data
@@ -107,7 +122,7 @@ public:
 // Functions dealing with Random numbers 
 float massDensityFunction();
 float M6FUTime(float M6FUIntervalLow, float M6FUIntervalHigh);
-void PeopleInGroup();
-void TicketTypeSet();
+int PeopleInGroup();
+int TicketTypeSet(int group, int door, int fastpass, int other);
 
 #endif

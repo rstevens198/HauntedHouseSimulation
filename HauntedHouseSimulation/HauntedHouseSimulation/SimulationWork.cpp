@@ -38,10 +38,22 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 			simulationInput >> M6FUIntervalLow;
 			// percentage for groupon tickets
 			simulationInput >> grouponTicketsPercentage;
+			// Percentage of door ticket sales
+			simulationInput >> doorTicketPercentage;
+			// Percentage of fastpass ticket sales
+			simulationInput >> fastpassTcketPercentage;
+			// Percentage of other ticket sales
+			simulationInput >> otherTicketPercentage;
 			// ticket value for groupon
 			simulationInput >> groupOnTicketAmount;
 			// ticket value for walk up
 			simulationInput >> doorTicketAmount;
+			// Amount the fastpass sells for
+			simulationInput >> fastpassTicketAmount;
+			// Amount of tickets sold from othger websites
+			simulationInput >> otherTicketPercentage;
+			// Amount of people allowed in the building, This is for fire code
+			simulationInput >> amountInsideBuilding;
 		}
 		// Close File 
 		simulationInput.close();
@@ -54,80 +66,226 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 		M6FUIntervalHigh = 900;
 		M6FUIntervalLow = 600;
 		grouponTicketsPercentage = 50;
+		doorTicketPercentage = 40;
+		fastpassTcketPercentage = 5;
+		otherTicketPercentage = 5;
 		groupOnTicketAmount = 4.00;
-		doorTicketAmount = 5.00;
+		doorTicketAmount = 10.00;
+		fastpassTicketAmount = 25.00;
+		amountInsideBuilding = 39;
 
-		
+
 	}
 
-	// Statistical Counters.
+	// Initialize the variables. These follow the same order that is in the .h file
+	outsideServerStatus = IDLE;
+	fastpassServerStatus = IDLE;
+	insideServerStatus = IDLE;
 	simulationTime = 0.0;
+	timeOfLastEvent = 0.0;
+	timeOfNextEvent = 0.0;
 	nextEventType = 0;
-	numberOfCustomersDelayed = 0;
-	totalNumberOfCustomers = numberOfCars;
-	numberInEntranceQueue = 0;
-	numberInExitQueue = 0;
-	entranceServerStatus = 0;
-	exitServerStatus = 0;
-	exitServerStatus = IDLE;
-	entranceServerStatus = IDLE;
-	maxEntranceQueueSize = 0;
-	maxExitQueueSize = 0;
-	totalEntranceQueueDelayTime = 0.0;
-	totalExitQueueDelayTime = 0.0;
-	totalSearchTime = 0.0;
-	parked = 0;
-	nextLeavingCar = 1.0e+29;
-	leavingIndex = 0;
+	numberOfGroupsExit = 0;
+	totalGroupOnTickets = 0;
+	totalDoorTickets = 0;
+	totalOtherTickets = 0;
+	peopleInM6FU = 0;
+	totalOutsideQueueDelayTime = 0.0;
+	totalFastpassQueueDelayTime = 0.0;
+	totalinsideQueueDelayTime = 0.0;
 	timeSinceLastEvent = 0.0;
-	areaUnderEntranceQueue = 0.0;
-	areaUnderExitQueue = 0.0;
-	areaEntranceServerStatus = 0.0;
-	areaExitServerStatus = 0.0;
-	exitTime = 0.0;
-	amountOfCustomersLeft = 0;
+	areaUnderOutsideQueue = 0.0;
+	areaUnderFastpassQueue = 0.0;
+	areaUnderInsideQueue = 0.0;
 
-	// Make Parking Spot Array The Correct Size
-	parkingLotSpots.resize(parkingSpots);
 
-	// Make Each Parking Spot Null or 0. We will add or replace the spot with zero after the spot is taken. 
-	for (int i = 0; i < parkingSpots; i++)
-		parkingLotSpots[i] = EMPTY;
-
-	// Resize The Vector To The Number Of Cars in the simulation. 
-	// We expand past the number of cars, to make sure we don't get an indexing error.  
-	arrayOfCars.resize(numberOfCars * 5);
+	arrayOfGroups.resize(numberOfGroups);
 
 	// Initialization the Cars into the car arrays
-	for (int i = 0; i < numberOfCars * 5; i++)
+	for (int i = 0; i < numberOfGroups; i++)
 	{
 		// Create The Amount Of Car Objects Requested By The User
-		arrayOfCars[i] = Car();
+		arrayOfGroups[i] = Group();
 
 		// Assign A Car Number To Each Car
-		arrayOfCars[i].carNumber = i;
+		arrayOfGroups[i].groupNumber = i;
 
-		// Set All Value To Zero
-		arrayOfCars[i].numberOfTimesLooked = 0;
+		// determine ticket type;
+		arrayOfGroups[i].ticketType = TicketTypeSet(grouponTicketsPercentage, doorTicketPercentage, fastpassTcketPercentage, otherTicketPercentage);
+
+		// set the number of people in each group
+		arrayOfGroups[i].groupPeopleNumber = PeopleInGroup();
 	}
-
+	
 	// Initialize event list. Since no customers are present, the departure (service completion) event is eliminated from consideration
 	// First arrival
-	timeOfNextEvent[1] = simulationTime + massDensityFunction();
+	nextEventTypeArray[1] = simulationTime + massDensityFunction();
 
 	// Schedule First Event
-	arrayOfCars[0].entranceArrivalTime = timeOfNextEvent[1];
+	if (arrayOfGroups[0].ticketType < 3)
+	{
+		arrayOfGroups[0].entranceArrivalTime = nextEventTypeArray[1];
+		// Depart entrance queue
+		nextEventTypeArray[2] = EMPTY;
+	}
 
-	// Depart entrance queue
-	timeOfNextEvent[2] = EMPTY;
+	else
+	{
+		arrayOfGroups[0].entranceArrivalTime = nextEventTypeArray[2];
+		// Depart entrance queue
+		nextEventTypeArray[1] = EMPTY;
+	}
 
 	// Leave parking space
-	timeOfNextEvent[3] = EMPTY;
+	nextEventTypeArray[3] = EMPTY;
 
 	// Arrive at exit queue
-	timeOfNextEvent[4] = EMPTY;
+	nextEventTypeArray[4] = EMPTY;
 
 	// Leave Exit Queue
-	timeOfNextEvent[5] = EMPTY;
+	nextEventTypeArray[5] = EMPTY;
+}
+
+void Simulation_Information::timing(void)
+{
+	// MinTimeUntilNextEvent
+	float minTimeNextEvent = 1.0e+29;
+
+	// Set to 0 until an event is chosen
+	nextEventType = 0;
+
+	// Determine the event type of the next event to occur.
+	// Iterate through all event types
+	for (int i = 1; i < NUMOFEVENTS; ++i)
+	{
+		// Find smallest time
+		if (nextEventTypeArray[i] < minTimeNextEvent)
+		{
+			// Set Min Time To Next Event
+			minTimeNextEvent = nextEventTypeArray[i];
+			// Set Next Event Type
+			nextEventType = i;
+			// Set Time Of Last Event To Simulation 
+			timeOfLastEvent = simulationTime;
+
+		}
+	}
+
+	// Check to see whether the event list is empty.
+	// If all times of next events are EMPTY no event is scheduled
+	if (nextEventType == 0)
+	{
+		// The event list is empty, so stop the simulation.
+		std::cout << "The event list is empty at time: " << simulationTime << std::endl;
+		exit(1);
+	}
+
+	// The event list is not empty, so advance the simulation clock.
+	simulationTime = minTimeNextEvent;
+}
+
+void Simulation_Information::chooseNextEvent(void)
+{
+	switch (nextEventType)
+	{
+	case 1:
+		// Arrival at entrance queue
+		outsideLine();
+		break;
+	case 2:
+		// Departure from entrance queue
+		fastPassLine();
+		break;
+	case 3:
+		// Leaving lot
+		insideLine();
+		break;
+	case 4:
+		// Arrival at exit queue
+		M6FU();
+		break;
+	case 5:
+		// Departure from exit queue
+		exitFunction();
+		break;
+	}
+}
+
+void Simulation_Information::outsideLine(void)
+{
+
+}
+
+void Simulation_Information::fastPassLine(void)
+{
+
+}
+
+void Simulation_Information::insideLine(void)
+{
+
+}
+
+void Simulation_Information::M6FU(void)
+{
+
+}
+
+void Simulation_Information::exitFunction(void)
+{
+
+}
+
+void Simulation_Information::updateAverageTimeStats(void)
+{
+
+}
+
+void Simulation_Information::report(void)
+{
+
+}
+
+float massDensityFunction()
+{
+	// F(X) = 24 * 3(1 - X)
+	// X is a Random Value Between 0-1 Not Including 1
+	float randomNumber = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+
+	// If Random Number is 1 Call Method Again
+	if (randomNumber == 1.0)
+		return massDensityFunction();
+
+	// Return F(X) = 72(1-X). We should be getting from 0-72
+	return 72 * (1 - randomNumber);
+}
+
+
+float M6FUTime(float IntervalLow, float IntervalHigh)
+{
+	float hauntedHouseTime = 0;
+	hauntedHouseTime = IntervalLow - (std::rand() % (static_cast<int>(IntervalHigh) - static_cast<int>(IntervalLow) + 1));
+	return hauntedHouseTime;
+}
+
+int PeopleInGroup()
+{
+	int people = -1;
+	people = std::rand() % 8 + 1;
+	return people;
+}
+
+int TicketTypeSet(int group, int door, int fast, int other)
+{
+	int ticket = -1;
+	ticket = std::rand() % 100;
+	if (ticket < group)
+		return 0;
+	else if (ticket < (group + door))
+		return 1;
+	else if (ticket < (group + door + other))
+		return 2;
+	else
+		return 3; 
 }
 
