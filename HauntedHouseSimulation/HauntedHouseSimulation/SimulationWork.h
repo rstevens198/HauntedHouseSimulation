@@ -63,7 +63,7 @@ class Simulation_Information
 {
 public:
 	// Variables For Simulation
-	const static int NUMOFEVENTS = 6;
+	const static int NUMOFEVENTS = 9;
 	int numberOfGroups, amountInsideBuilding, 
 		grouponTicketsPercentage, doorTicketPercentage, fastpassTcketPercentage, otherTicketPercentage,
 		outsideServerStatus, fastpassServerStatus, insideServerStatus;
@@ -103,11 +103,17 @@ public:
 	// Event Function. Chose next event type
 	void chooseNextEvent(void);
 	// Arrival Function For outsideLine
-	void outsideLine(void);
+	void outsideLineArrive(void);
+	// Exit Function For outsideLine
+	void outsideLineExit(void);
 	// Arrival Function for FastPassLine
-	void fastPassLine(void);
+	void fastPassLineArrive(void);
+	// Exit Function for FastPassLine
+	void fastPassLineExit(void);
 	// sets up the inside line queue
-	void insideLine(void);
+	void insideLineArrive(void);
+	// sets up the inside line exit queue
+	void insideLineExit(void);
 	// put people in the haunted house
 	void M6FU(void);
 	// Arrival Function For Exit Gate

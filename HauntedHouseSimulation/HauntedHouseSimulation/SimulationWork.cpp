@@ -187,58 +187,55 @@ void Simulation_Information::chooseNextEvent(void)
 	switch (nextEventType)
 	{
 	case 1:
-		// Arrival at entrance queue
-		outsideLine();
+		// Arrival at outside line
+		outsideLineArrive();
 		break;
 	case 2:
-		// Departure from entrance queue
-		fastPassLine();
+		// Exit at outside line
+		outsideLineExit();
 		break;
 	case 3:
-		// Leaving lot
-		insideLine();
+		// Arrival at fastpass line
+		fastPassLineArrive();
 		break;
 	case 4:
-		// Arrival at exit queue
-		M6FU();
+		// Exit at fastpass queue
+		fastPassLineExit();
 		break;
 	case 5:
-		// Departure from exit queue
+		// Arrival at inside line
+		insideLineArrive();
+		break;
+	case 6:
+		// Exit at the inside line
+		insideLineExit();
+		break;
+	case 7:
+		// Put people in the HH
+		M6FU();
+		break;
+	case 8:
+		// Departure from HH
 		exitFunction();
 		break;
 	}
 }
 
-void Simulation_Information::outsideLine(void)
+void Simulation_Information::outsideLineArrive(void)
 {
 	// get the next event and determine if it is a fastpass
 	arrayOfGroups[arrivingGroupCounter].entranceArrivalTime = massDensityFunction();
-
-	if (arrayOfGroups[arrivingGroupCounter].ticketType < 3)
-	{
-		nextEventTypeArray[1] = arrayOfGroups[arrivingGroupCounter].entranceArrivalTime;
-	}
-	else
-	{
-		nextEventTypeArray[2] = arrayOfGroups[arrivingGroupCounter].entranceArrivalTime;
-	}
-
-
-
-	if (insideQueue.size() > 6)
-	{
-		outsideQueue.push(arrayOfGroups[arrivingGroupCounter]);
-		arrivingGroupCounter++;
-		
-	}
-	else
-		totalOutsideQueueDelayTime += simulationTime - timeOfLastEvent;
 
 	
 		
 }
 
-void Simulation_Information::fastPassLine(void)
+void Simulation_Information::outsideLineExit(void)
+{
+
+}
+
+void Simulation_Information::fastPassLineArrive(void)
 {
 	// get the next event and determine if it is a fastpass
 	arrayOfGroups[arrivingGroupCounter].entranceArrivalTime = massDensityFunction();
