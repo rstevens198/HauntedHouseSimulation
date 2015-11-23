@@ -26,6 +26,8 @@ public:
 	float entranceArrivalTime;
 	// Variable For time they got to the inside line
 	float insideLineTime;
+	// variable used to store time entering the HH
+	float M6FUEnterTime;
 	// Variable For time spent in the haunted house
 	float M6FUTimeLength;
 	// Variable for the time group exits the huanted house
@@ -34,6 +36,12 @@ public:
 	float totalTimeInSystem;
 	// Variable to store what type of ticket thy have
 	int ticketType;
+	// variable to store how long it takes to get inside. 
+	float lineWaitTime;
+	// variable to store how long it takes to go from inside line to HH
+	float insideHHTime;
+	// variable to store total time spent in lines
+	float totalLineTime;
 	
 
 	// Default Constructor
@@ -42,10 +50,12 @@ public:
 		int groupNumber = 0;
 		// Variable for the number on people in each group
 		int groupPeopleNumber = 0;
-		// Variable For Entrance Arrival Time (Enter Queue)
+		// Variable For Entrance Arrival Time 
 		float entranceArrivalTime = 0.0;
-		// Variable For Entrance Depart Time (Exit Queue To Look For Parking)
+		// Variable For when they get to the inside line
 		float insideLineTime = 0.0;
+		// variable used to store time entering the HH
+		float M6FUEnterTime = 0.0;
 		// Variable For time spent in the haunted house
 		float M6FUTimeLength = 0.0;
 		// Variable for the time group exits the huanted house
@@ -54,6 +64,12 @@ public:
 		float totalTimeInSystem = 0.0;
 		// Variable to store what type of ticket thy have
 		int ticketType = 0;
+		// variable to store how long it takes to get inside. 
+		float lineWaitTime = 0.0;
+		// variable to store how long it takes to go from inside line to HH
+		float insideHHTime = 0.0;
+		// variable to store total time spent in lines
+		float totalLineTime = 0.0;
 	}
 };
 
@@ -63,7 +79,9 @@ class Simulation_Information
 {
 public:
 	// Variables For Simulation
-	const static int NUMOFEVENTS = 9;
+	const static int NUMOFEVENTS = 7;
+	const static int outsideLineTicketTime = 120;
+	const static int fastpassLineTicketTime = 119;
 	int numberOfGroups, amountInsideBuilding, 
 		grouponTicketsPercentage, doorTicketPercentage, fastpassTcketPercentage, otherTicketPercentage,
 		outsideServerStatus, fastpassServerStatus, insideServerStatus;
@@ -111,9 +129,7 @@ public:
 	// Exit Function for FastPassLine
 	void fastPassLineExit(void);
 	// sets up the inside line queue
-	void insideLineArrive(void);
-	// sets up the inside line exit queue
-	void insideLineExit(void);
+	void insideLine(Group);
 	// put people in the haunted house
 	void M6FU(void);
 	// Arrival Function For Exit Gate
