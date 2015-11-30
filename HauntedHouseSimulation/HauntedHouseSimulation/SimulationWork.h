@@ -90,8 +90,7 @@ public:
 		simulationTime, timeOfLastEvent, timeOfNextEvent;
 
 	// Statistical Counter Variables
-	int nextEventType, numberOfGroupsExit, peopleInM6FU,
-		totalGroupOnTickets, totalDoorTickets, totalOtherTickets;
+	int nextEventType, numberOfGroupsExit, peopleInM6FU;
 	
 	float totalOutsideQueueDelayTime, totalFastpassQueueDelayTime, totalinsideQueueDelayTime,
 		  timeSinceLastEvent,

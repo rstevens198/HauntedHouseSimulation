@@ -87,9 +87,6 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 	timeOfNextEvent = 0.0;
 	nextEventType = 0;
 	numberOfGroupsExit = 0;
-	totalGroupOnTickets = 0;
-	totalDoorTickets = 0;
-	totalOtherTickets = 0;
 	peopleInM6FU = 0;
 	totalOutsideQueueDelayTime = 0.0;
 	totalFastpassQueueDelayTime = 0.0;
@@ -260,23 +257,23 @@ void Simulation_Information::outsideLineExit(void)
 		nextEventTypeArray[2] = EMPTY;
 	}
 	// if the amount inside building is full so we will increment the time
-	else if (insideQueue.size >= amountInsideBuilding)
+	else if (insideQueue.size() >= amountInsideBuilding)
 	{
 		nextEventTypeArray[2] = simulationTime + outsideLineTicketTime;
 	}
 	// if the fastpass queue has no one in it we will push someone on it,
 	// or if the last person to bu pushed was a fastpass then we push.
-	else if ((fastpassQueue.size == 0) || (fastpassLastTicketType == true))
+	else if ((fastpassQueue.size() == 0) || (fastpassLastTicketType == true))
 	{
 	
-		Group temp = outsideQueue.front;
+		Group temp = outsideQueue.front();
 
 		insideLine(temp);
 		outsideQueue.pop();
 		fastpassLastTicketType = false;
 
 			// if our queue is now empty change the parameters
-			if (outsideQueue.size == 0)
+			if (outsideQueue.size() == 0)
 			{
 				outsideServerStatus = IDLE;
 				nextEventTypeArray[2] = EMPTY;				
@@ -348,25 +345,25 @@ void Simulation_Information::fastPassLineExit(void)
 	}
 
 	// if the amount inside building is full so we will increment the time
-	else if (insideQueue.size >= amountInsideBuilding)
+	else if (insideQueue.size() >= amountInsideBuilding)
 	{
 		nextEventTypeArray[4] = simulationTime + fastpassLineTicketTime;
 	}
-	else if ((outsideQueue.size > 0) || (fastpassLastTicketType == true))
+	else if ((outsideQueue.size() > 0) || (fastpassLastTicketType == true))
 	{
 		nextEventTypeArray[4] = simulationTime + fastpassLineTicketTime;
 	}
 	else
 	{
 		
-		Group temp = fastpassQueue.front;
+		Group temp = fastpassQueue.front();
 		
 		insideLine(temp);
 		fastpassQueue.pop();
 		fastpassLastTicketType = true;
 
 		// if our queue is now empty change the parameters
-		if (fastpassQueue.size == 0)
+		if (fastpassQueue.size() == 0)
 		{
 			fastpassServerStatus = IDLE;
 			nextEventTypeArray[4] = EMPTY;
@@ -410,7 +407,7 @@ void Simulation_Information::M6FU(void)
 	M6FUQueue.push(arrayOfGroups[temp.groupNumber]);
 	arrayOfGroups[temp.groupNumber].M6FUEnterTime = simulationTime;
 	nextEventTypeArray[6] = simulationTime + temp.M6FUTimeLength;
-	insideQueue.pop;
+	insideQueue.pop();
 	if (insideQueue.size() == 0)
 		insideServerStatus = IDLE;
 	else 
@@ -425,7 +422,7 @@ void Simulation_Information::M6FU(void)
 
 void Simulation_Information::exitFunction(void)
 {
-	Group temp = M6FUQueue.front;
+	Group temp = M6FUQueue.front();
 
 	arrayOfGroups[temp.groupNumber].M6FUExitTime = simulationTime;
 	arrayOfGroups[temp.groupNumber].totalTimeInSystem = arrayOfGroups[temp.groupNumber].M6FUExitTime - arrayOfGroups[temp.groupNumber].entranceArrivalTime;
@@ -435,7 +432,8 @@ void Simulation_Information::exitFunction(void)
 	arrayOfGroups[temp.groupNumber].totalLineTime = arrayOfGroups[temp.groupNumber].lineWaitTime + arrayOfGroups[temp.groupNumber].insideLineTime;
 
 
-	M6FUQueue.pop;
+	M6FUQueue.pop();
+	numberOfGroupsExit++;
 }
 
 void Simulation_Information::updateAverageTimeStats(void)
@@ -445,12 +443,30 @@ void Simulation_Information::updateAverageTimeStats(void)
 
 void Simulation_Information::report(void)
 {
-	int totalGrouponTickets;
-	int totalDoorTickets;
-	int totalotherTickets;
+	int totalGroupOnTickets = 0;
+	int totalDoorTickets = 0;
+	int totalOtherTickets = 0;
+	int totalFastpassTickets = 0;
 
-	int avgGroupSize;
+	int avgGroupSize = 0;
 
+
+	for (int i = 0; i < arrayOfGroups.size(); i++)
+	{
+		avgGroupSize += arrayOfGroups[i].groupPeopleNumber;
+
+		if (arrayOfGroups[i].ticketType == 0)
+			totalGroupOnTickets++;
+		else if (arrayOfGroups[i].ticketType == 1)
+			totalDoorTickets++;
+		else if (arrayOfGroups[i].ticketType == 2)
+			totalOtherTickets++;
+		else
+			totalFastpassTickets++;	
+	}
+	avgGroupSize = avgGroupSize / numberOfGroups;
+
+	std::cout << numberOfGroupsExit;
 }
 
 float massDensityFunction()
