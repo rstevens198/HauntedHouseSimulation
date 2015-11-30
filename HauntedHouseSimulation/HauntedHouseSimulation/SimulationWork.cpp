@@ -434,6 +434,8 @@ void Simulation_Information::exitFunction(void)
 
 	M6FUQueue.pop();
 	numberOfGroupsExit++;
+
+	std::cout << numberOfGroupsExit;
 }
 
 void Simulation_Information::updateAverageTimeStats(void)
