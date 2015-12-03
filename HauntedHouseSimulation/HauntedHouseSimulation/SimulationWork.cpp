@@ -62,7 +62,7 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 	else
 	{
 		// Default Initialization Variables.
-		numberOfGroups = 5; // 377
+		numberOfGroups = 377; // 377
 		M6FUEnterRate = 420;
 		M6FUIntervalHigh = 900;
 		M6FUIntervalLow = 600;
@@ -228,6 +228,8 @@ void Simulation_Information::outsideLineArrive(void)
 		outsideQueue.push(arrayOfGroups[arrivingGroupCounter - 1]);
 		if (arrivingGroupCounter < numberOfGroups)
 			arrivingGroupCounter++;
+		if (arrivingGroupCounter >= numberOfGroups)
+			nextEventTypeArray[1] = nextEventTypeArray[2] + 45;
 	}
 	else
 	{
@@ -304,6 +306,8 @@ void Simulation_Information::fastPassLineArrive(void)
 	{
 		fastpassQueue.push(arrayOfGroups[arrivingGroupCounter - 1]);
 		arrivingGroupCounter++;
+		if (arrivingGroupCounter >= numberOfGroups)
+			nextEventTypeArray[3] = nextEventTypeArray[4] + 45;
 	}
 	else
 	{
@@ -312,9 +316,7 @@ void Simulation_Information::fastPassLineArrive(void)
 
 		//schedule departure
 		nextEventTypeArray[4] = simulationTime + outsideLineTicketTime;
-
 		fastpassQueue.push(arrayOfGroups[arrivingGroupCounter - 1]);
-
 		arrivingGroupCounter++;
 	}
 }
@@ -448,7 +450,7 @@ void Simulation_Information::exitFunction(void)
 	else
 	{
 		temp = M6FUQueue.front();
-		nextEventTypeArray[6] = temp.M6FUTimeLength + temp.M6FUEnterTime;
+		nextEventTypeArray[6] = temp.M6FUTimeLength + arrayOfGroups[temp.groupNumber].M6FUEnterTime;
 	}
 
 	std::cout << " this is the number that exited: " << numberOfGroupsExit;
