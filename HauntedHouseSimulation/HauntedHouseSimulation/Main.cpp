@@ -24,7 +24,7 @@ int main(int argc, char * argv[])
 	Simulation_Information firstSimulation = Simulation_Information(argc, argv);
 
 	// Simulation Loop. Run Simulation Until Exit Parameter is met.
-	while (firstSimulation.numberOfGroupsExit < firstSimulation.numberOfGroups)
+	while (firstSimulation.numberOfGroupsExit <= firstSimulation.numberOfGroups)
 	{
 		// Timing Function To Determine The Next Event
 		firstSimulation.timing();

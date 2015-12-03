@@ -80,8 +80,8 @@ class Simulation_Information
 public:
 	// Variables For Simulation
 	const static int NUMOFEVENTS = 7;
-	const static int outsideLineTicketTime = 120;
-	const static int fastpassLineTicketTime = 119;
+	const static int outsideLineTicketTime = 150;
+	const static int fastpassLineTicketTime = 140;
 	int numberOfGroups, amountInsideBuilding, 
 		grouponTicketsPercentage, doorTicketPercentage, fastpassTcketPercentage, otherTicketPercentage,
 		outsideServerStatus, fastpassServerStatus, insideServerStatus;
@@ -141,7 +141,7 @@ public:
 
 
 // Functions dealing with Random numbers 
-float massDensityFunction();
+float massDensityFunction(float simTime);
 float M6FUTime(float M6FUIntervalLow, float M6FUIntervalHigh);
 int PeopleInGroup();
 int TicketTypeSet(int group, int door, int fastpass, int other);
