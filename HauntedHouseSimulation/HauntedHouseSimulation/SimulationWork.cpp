@@ -62,14 +62,14 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 	else
 	{
 		// Default Initialization Variables.
-		numberOfGroups = 377; // 377
-		M6FUEnterRate = 420;
-		M6FUIntervalHigh = 900;
-		M6FUIntervalLow = 600;
-		grouponTicketsPercentage = 55;
-		doorTicketPercentage = 33;
-		fastpassTcketPercentage = 4;
-		otherTicketPercentage = 8;
+		numberOfGroups = 3; 
+		M6FUEnterRate = 240;
+		M6FUIntervalHigh = 600;
+		M6FUIntervalLow = 480;
+		grouponTicketsPercentage = 100; //55;
+		doorTicketPercentage = 0; //33;
+		fastpassTcketPercentage = 0; //4;
+		otherTicketPercentage = 0;// 8;
 		groupOnTicketAmount = 2.00;
 		doorTicketAmount = 5.00;
 		fastpassTicketAmount = 13.50;
@@ -120,7 +120,7 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 	
 	// Initialize event list. Since no customers are present, the departure (service completion) event is eliminated from consideration
 	// First arrival
-	nextEventTypeArray[1] = simulationTime + massDensityFunction(simulationTime);
+	nextEventTypeArray[1] = 1;
 
 
 	arrayOfGroups[0].entranceArrivalTime = nextEventTypeArray[1];
@@ -219,16 +219,19 @@ void Simulation_Information::outsideLineArrive(void)
 		else
 		{
 			nextEventTypeArray[3] = arrayOfGroups[arrivingGroupCounter].entranceArrivalTime;
+			nextEventTypeArray[1] = EMPTY;
 		}
 	}
-
+	
 	//see if server is busy
 	if (outsideServerStatus == BUSY)
 	{
-		outsideQueue.push(arrayOfGroups[arrivingGroupCounter - 1]);
 		if (arrivingGroupCounter < numberOfGroups)
+		{
+			outsideQueue.push(arrayOfGroups[arrivingGroupCounter - 1]);
 			arrivingGroupCounter++;
-		if (arrivingGroupCounter >= numberOfGroups)
+		}
+		else 
 			nextEventTypeArray[1] = nextEventTypeArray[2] + 45;
 	}
 	else
@@ -236,25 +239,20 @@ void Simulation_Information::outsideLineArrive(void)
 		// set the server to busy
 		outsideServerStatus = BUSY;
 
-		//schedule departure
+			//schedule departure
 		nextEventTypeArray[2] = simulationTime + outsideLineTicketTime;
 		outsideQueue.push(arrayOfGroups[arrivingGroupCounter - 1]);
-		if ( arrivingGroupCounter < numberOfGroups)
+		if (arrivingGroupCounter <= numberOfGroups)
 			arrivingGroupCounter++;
+		else
+			nextEventTypeArray[1] = EMPTY;
 	}
 }
 
 void Simulation_Information::outsideLineExit(void)
 {
-	//for error checking purposes
-	//see if the queue is empty if it is reset it
-	if (outsideQueue.size() == 0)
-	{
-		outsideServerStatus = IDLE;
-		nextEventTypeArray[2] = EMPTY;
-	}
 	// if the amount inside building is full so we will increment the time
-	else if (insideQueue.size() >= amountInsideBuilding)
+	if (insideQueue.size() >= amountInsideBuilding)
 	{
 		nextEventTypeArray[2] = simulationTime + outsideLineTicketTime;
 	}
@@ -282,6 +280,10 @@ void Simulation_Information::outsideLineExit(void)
 				nextEventTypeArray[2] = simulationTime + outsideLineTicketTime;
 			}
 	}
+	else
+	{
+		nextEventTypeArray[2] = simulationTime + outsideLineTicketTime;
+	}
 }
 
 void Simulation_Information::fastPassLineArrive(void)
@@ -289,11 +291,12 @@ void Simulation_Information::fastPassLineArrive(void)
 	if (arrivingGroupCounter < numberOfGroups)
 	{
 		// get the next event and determine if it is a fastpass
-		arrayOfGroups[arrivingGroupCounter].entranceArrivalTime = massDensityFunction(simulationTime);
+		arrayOfGroups[arrivingGroupCounter].entranceArrivalTime = massDensityFunction(simulationTime)+ simulationTime;
 
 		if (arrayOfGroups[arrivingGroupCounter].ticketType < 3)
 		{
 			nextEventTypeArray[1] = arrayOfGroups[arrivingGroupCounter].entranceArrivalTime;
+			nextEventTypeArray[3] = EMPTY;
 		}
 		else
 		{
@@ -305,7 +308,8 @@ void Simulation_Information::fastPassLineArrive(void)
 	if (fastpassServerStatus == BUSY)
 	{
 		fastpassQueue.push(arrayOfGroups[arrivingGroupCounter - 1]);
-		arrivingGroupCounter++;
+		if (arrivingGroupCounter < numberOfGroups)
+			arrivingGroupCounter++;
 		if (arrivingGroupCounter >= numberOfGroups)
 			nextEventTypeArray[3] = nextEventTypeArray[4] + 45;
 	}
@@ -317,30 +321,24 @@ void Simulation_Information::fastPassLineArrive(void)
 		//schedule departure
 		nextEventTypeArray[4] = simulationTime + outsideLineTicketTime;
 		fastpassQueue.push(arrayOfGroups[arrivingGroupCounter - 1]);
-		arrivingGroupCounter++;
+		if (arrivingGroupCounter < numberOfGroups)
+			arrivingGroupCounter++;
 	}
 }
 
 void Simulation_Information::fastPassLineExit(void)
 {
-	//for error checking purposes
-	//see if the queue is empty if it is reset it
-	if (fastpassQueue.size() == 0)
-	{
-		fastpassServerStatus = IDLE;
-		nextEventTypeArray[4] = EMPTY;
-	}
 
 	// if the amount inside building is full so we will increment the time
-	else if (insideQueue.size() >= amountInsideBuilding)
+	if (insideQueue.size() >= amountInsideBuilding)
 	{
 		nextEventTypeArray[4] = simulationTime + fastpassLineTicketTime;
 	}
-	else if ((outsideQueue.size() > 0) || (fastpassLastTicketType == true))
+	else if ((outsideQueue.size() > 0) && (fastpassLastTicketType == true))
 	{
 		nextEventTypeArray[4] = simulationTime + fastpassLineTicketTime;
 	}
-	else
+	else 
 	{
 		
 		Group temp = fastpassQueue.front();
@@ -452,8 +450,6 @@ void Simulation_Information::exitFunction(void)
 		temp = M6FUQueue.front();
 		nextEventTypeArray[6] = temp.M6FUTimeLength + arrayOfGroups[temp.groupNumber].M6FUEnterTime;
 	}
-
-	std::cout << " this is the number that exited: " << numberOfGroupsExit;
 }
 
 void Simulation_Information::updateAverageTimeStats(void)
@@ -471,15 +467,18 @@ void Simulation_Information::updateAverageTimeStats(void)
 	statsData << simulationTime << ", " << outsideQueue.size() << ", " << fastpassQueue.size() << ", " << insideQueue.size() << ", "
 		<< M6FUQueue.size() << ", " << areaUnderOutsideQueue << ", " << areaUnderFastpassQueue << ", " << areaUnderInsideQueue << std::endl;
 
-	if (arrivingGroupCounter % 10 == 0)
+
+
+	if (numberOfGroupsExit % 10 == 0)
 	{
 		// Show Simulation Time, Last Event Time, Update Queue Sizes. Get Some Area Under Curve Statistics 
 		std::cout << "Current Simulation Time: " << simulationTime << std::endl;
+		std::cout << "current number of groups that left: " << numberOfGroupsExit << std::endl;
 		std::cout << "Current Outside Queue Size: " << outsideQueue.size() << std::endl;
 		std::cout << "Current Fastpass Queue Size: " << fastpassQueue.size() << std::endl;
 		std::cout << "Current Inside Queue Size: " << insideQueue.size() << std::endl;
 		std::cout << "Current M6FU Queue Size: " << M6FUQueue.size() << std::endl;
-		std::cout << "Current Customers In The System: " << (arrivingGroupCounter - numberOfGroupsExit) << std::endl;
+		std::cout << "Current Customers In The System: " << (arrivingGroupCounter - numberOfGroupsExit -1) << std::endl;
 		std::cout << std::endl;
 		std::cout << std::endl;
 	}
@@ -496,6 +495,7 @@ void Simulation_Information::report(void)
 	int totalGroupOnMoney = 0;
 	int totalDoorMoney = 0;
 	int totalOtherMoney = 0;
+	int totalTicketsSold;
 	
 	int otherTicketAmount = 5; // this is a placeholder. Needs to be changed after I find out the actual ticket price.
 
@@ -507,13 +507,13 @@ void Simulation_Information::report(void)
 		avgGroupSize += arrayOfGroups[i].groupPeopleNumber;
 
 		if (arrayOfGroups[i].ticketType == 0)
-			totalGroupOnTickets++;
+			totalGroupOnTickets += arrayOfGroups[i].groupPeopleNumber;
 		else if (arrayOfGroups[i].ticketType == 1)
-			totalDoorTickets++;
+			totalDoorTickets += arrayOfGroups[i].groupPeopleNumber;
 		else if (arrayOfGroups[i].ticketType == 2)
-			totalOtherTickets++;
+			totalOtherTickets += arrayOfGroups[i].groupPeopleNumber;
 		else
-			totalFastpassTickets++;	
+			totalFastpassTickets += arrayOfGroups[i].groupPeopleNumber;
 	}
 	avgGroupSize = avgGroupSize / numberOfGroups;
 	
@@ -522,9 +522,18 @@ void Simulation_Information::report(void)
 	totalOtherMoney = otherTicketAmount * totalOtherTickets;
 	totalFastpassMoney = fastpassTicketAmount * totalFastpassTickets;
 	totalMoneyMade = totalDoorMoney + totalGroupOnMoney + totalOtherMoney + totalFastpassMoney;
+	totalTicketsSold = totalGroupOnTickets + totalDoorTickets + totalOtherTickets + totalFastpassTickets;
 
-	std::cout << "Number of groups exit: " << numberOfGroupsExit << std::endl;;
+
+	std::cout << "Number of groups exit: " << numberOfGroupsExit -1 << std::endl;;
+	std::cout << "This is the number of groups that are in the outside queue: " << outsideQueue.size() << std::endl;
+	std::cout << "This is the number of groups that are in the fastpass queue: " << fastpassQueue.size() << std::endl;
+	std::cout << "This is the number of groups that are in the inside queue: " << insideQueue.size() << std::endl;
+	std::cout << "This is the number of groups that are in the M6FU queue: " << M6FUQueue.size() << std::endl;
+	std::cout << "Average group size: " << avgGroupSize << std::endl;
+	std::cout << "Total tickets sold: " << totalTicketsSold << std::endl;
 	std::cout << "Total money made: " << totalMoneyMade << std::endl;
+	std::cout << "Total simulation time: " << simulationTime << std::endl;
 }
 
 float massDensityFunction(float simTime)
@@ -549,7 +558,7 @@ float massDensityFunction(float simTime)
 		return massDensityFunction(simTime);
 
 	// Return F(X) = 72(1-X). We should be getting from 0-72
-	return 960 * (1 - randomNumber);
+	return 192 * (1 - randomNumber);
 }
 
 
