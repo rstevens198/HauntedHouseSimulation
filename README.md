@@ -7,6 +7,7 @@ Program description: This program is used as a haunted house simulator for Motel
       i
       i
 ffff
+     
       000000000000
 
 File Manifest:
