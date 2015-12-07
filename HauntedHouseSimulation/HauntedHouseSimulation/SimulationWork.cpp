@@ -62,14 +62,14 @@ Simulation_Information::Simulation_Information(int argc, char * argv[])
 	else
 	{
 		// Default Initialization Variables.
-		numberOfGroups = 3; 
+		numberOfGroups = 75; 
 		M6FUEnterRate = 240;
 		M6FUIntervalHigh = 600;
 		M6FUIntervalLow = 480;
-		grouponTicketsPercentage = 100; //55;
-		doorTicketPercentage = 0; //33;
-		fastpassTcketPercentage = 0; //4;
-		otherTicketPercentage = 0;// 8;
+		grouponTicketsPercentage = 55;
+		doorTicketPercentage = 33;
+		fastpassTcketPercentage = 4;
+		otherTicketPercentage = 8;
 		groupOnTicketAmount = 2.00;
 		doorTicketAmount = 5.00;
 		fastpassTicketAmount = 13.50;
@@ -226,12 +226,10 @@ void Simulation_Information::outsideLineArrive(void)
 	//see if server is busy
 	if (outsideServerStatus == BUSY)
 	{
+		outsideQueue.push(arrayOfGroups[arrivingGroupCounter - 1]);
 		if (arrivingGroupCounter < numberOfGroups)
-		{
-			outsideQueue.push(arrayOfGroups[arrivingGroupCounter - 1]);
 			arrivingGroupCounter++;
-		}
-		else 
+		if (arrivingGroupCounter >= numberOfGroups)
 			nextEventTypeArray[1] = nextEventTypeArray[2] + 45;
 	}
 	else
@@ -239,13 +237,11 @@ void Simulation_Information::outsideLineArrive(void)
 		// set the server to busy
 		outsideServerStatus = BUSY;
 
-			//schedule departure
+		//schedule departure
 		nextEventTypeArray[2] = simulationTime + outsideLineTicketTime;
 		outsideQueue.push(arrayOfGroups[arrivingGroupCounter - 1]);
-		if (arrivingGroupCounter <= numberOfGroups)
+		if (arrivingGroupCounter < numberOfGroups)
 			arrivingGroupCounter++;
-		else
-			nextEventTypeArray[1] = EMPTY;
 	}
 }
 
@@ -291,7 +287,7 @@ void Simulation_Information::fastPassLineArrive(void)
 	if (arrivingGroupCounter < numberOfGroups)
 	{
 		// get the next event and determine if it is a fastpass
-		arrayOfGroups[arrivingGroupCounter].entranceArrivalTime = massDensityFunction(simulationTime)+ simulationTime;
+		arrayOfGroups[arrivingGroupCounter].entranceArrivalTime = massDensityFunction(simulationTime) + simulationTime;
 
 		if (arrayOfGroups[arrivingGroupCounter].ticketType < 3)
 		{
@@ -454,8 +450,11 @@ void Simulation_Information::exitFunction(void)
 
 void Simulation_Information::updateAverageTimeStats(void)
 {
-	areaUnderOutsideQueue = outsideQueue.size() * (simulationTime - timeOfLastEvent);
-	areaUnderFastpassQueue = fastpassQueue.size() * (simulationTime - timeOfLastEvent);
+	if (arrivingGroupCounter < numberOfGroups) 
+	{
+		areaUnderOutsideQueue = outsideQueue.size() * (simulationTime - timeOfLastEvent);
+		areaUnderFastpassQueue = fastpassQueue.size() * (simulationTime - timeOfLastEvent);
+	}
 	areaUnderInsideQueue = insideQueue.size() * (simulationTime - timeOfLastEvent);
 
 	std::ofstream statsData;
@@ -495,16 +494,24 @@ void Simulation_Information::report(void)
 	int totalGroupOnMoney = 0;
 	int totalDoorMoney = 0;
 	int totalOtherMoney = 0;
-	int totalTicketsSold;
-	
+	int totalTicketsSold = 0;
+	float avgTimeSpentInM6FU = 0;
+	float avgWaitingTime = 0;
+	float avgTimeInSystem = 0;
+
 	int otherTicketAmount = 5; // this is a placeholder. Needs to be changed after I find out the actual ticket price.
 
 	int avgGroupSize = 0;
 
 
-	for (int i = 0; i < arrayOfGroups.size(); i++)
+	for (int i = 0; i < arrayOfGroups.size()-1; i++)
 	{
 		avgGroupSize += arrayOfGroups[i].groupPeopleNumber;
+		avgTimeSpentInM6FU += arrayOfGroups[i].M6FUTimeLength;
+
+		avgWaitingTime = arrayOfGroups[i].M6FUEnterTime - arrayOfGroups[i].entranceArrivalTime;
+		avgTimeInSystem = arrayOfGroups[i].M6FUExitTime - arrayOfGroups[i].entranceArrivalTime;
+
 
 		if (arrayOfGroups[i].ticketType == 0)
 			totalGroupOnTickets += arrayOfGroups[i].groupPeopleNumber;
@@ -515,8 +522,12 @@ void Simulation_Information::report(void)
 		else
 			totalFastpassTickets += arrayOfGroups[i].groupPeopleNumber;
 	}
-	avgGroupSize = avgGroupSize / numberOfGroups;
 	
+	avgGroupSize = avgGroupSize / numberOfGroups-1;
+	avgTimeSpentInM6FU = avgTimeSpentInM6FU / numberOfGroups-1;
+	avgWaitingTime = avgWaitingTime / numberOfGroups-1;
+	avgTimeInSystem = avgTimeInSystem / numberOfGroups-1;
+
 	totalDoorMoney = doorTicketAmount * totalDoorTickets;
 	totalGroupOnMoney = groupOnTicketAmount * totalGroupOnTickets;
 	totalOtherMoney = otherTicketAmount * totalOtherTickets;
@@ -525,14 +536,25 @@ void Simulation_Information::report(void)
 	totalTicketsSold = totalGroupOnTickets + totalDoorTickets + totalOtherTickets + totalFastpassTickets;
 
 
-	std::cout << "Number of groups exit: " << numberOfGroupsExit -1 << std::endl;;
-	std::cout << "This is the number of groups that are in the outside queue: " << outsideQueue.size() << std::endl;
-	std::cout << "This is the number of groups that are in the fastpass queue: " << fastpassQueue.size() << std::endl;
-	std::cout << "This is the number of groups that are in the inside queue: " << insideQueue.size() << std::endl;
-	std::cout << "This is the number of groups that are in the M6FU queue: " << M6FUQueue.size() << std::endl;
+	std::cout << "Number of groups exit: " << numberOfGroupsExit -1 << std::endl << std::endl;;
+
+	std::cout << "This is the amount of groupon tickets sold: " << totalGroupOnTickets << std::endl;
+	std::cout << "This is the amount of door tickets sold: " << totalDoorTickets << std::endl;
+	std::cout << "This is the amount of other tickets sold: " << totalOtherTickets << std::endl;
+	std::cout << "This is the amount of fastpass tickets sold: " << totalFastpassTickets << std::endl << std::endl;
+
+	std::cout << "This is the amount of money made from groupon tickets: $" << totalGroupOnMoney << std::endl;
+	std::cout << "This is the amount of money made from door tickets: $" << totalDoorMoney << std::endl;
+	std::cout << "This is the amount of money made from other tickets: $" << totalOtherMoney << std::endl;
+	std::cout << "This is the amount of money made from fastpass tickets: $" << totalFastpassMoney << std::endl << std::endl;
+
 	std::cout << "Average group size: " << avgGroupSize << std::endl;
+	std::cout << "Average time spent in the haunted House: " << avgTimeSpentInM6FU << std::endl;
+	std::cout << "Average time spent in line: " << avgWaitingTime << std::endl;
+	std::cout << "Average time spent in system: " << avgTimeInSystem << std::endl << std::endl;
+
 	std::cout << "Total tickets sold: " << totalTicketsSold << std::endl;
-	std::cout << "Total money made: " << totalMoneyMade << std::endl;
+	std::cout << "Total money made: $" << totalMoneyMade << std::endl;
 	std::cout << "Total simulation time: " << simulationTime << std::endl;
 }
 
