@@ -1,4 +1,6 @@
 /*
+Ryan Stevens
+810318529
 Class: CS 558
 Project: Haunted House Simulation for extra credit
 Description: This program is to run simulations and determine the best way to make money. should it be bigger groups? 
